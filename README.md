@@ -1,2 +1,2 @@
 # control_falcon
-Flacon control board
+Falcon control board
