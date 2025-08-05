@@ -1,6 +1,17 @@
+#include <Arduino.h>
 #include <Servo.h>
 #include <Wire.h>
+#include "pin_allocations.hpp"
+#include "control_surfaces.hpp"
 
+HardwareSerial debug_serial(PIN_DEBUG_RX, PIN_DEBUG_TX);
+
+const int I2C_ADDRESS = 8;
+TwoWire main_i2c(PIN_MAIN_SDA, PIN_MAIN_SCL);
+TwoWire controller_i2c(PIN_CONTROLLER_SDA, PIN_CONTROLLER_SCL);
+
+const int LED_ACTIVE = HIGH;
+const int BUZZER_ACTIVE = HIGH;
 
 Servo myservo0;  // create servo object to control a servo
 Servo myservo1;
@@ -26,7 +37,7 @@ float readings[4];
 
 
 
-void receiveEvent(int numberReceived) {
+void receive_event(int numberReceived) {
   
   String data0 = "";
   String data1 = "";
@@ -70,20 +81,19 @@ void receiveEvent(int numberReceived) {
 }
 
 void setup() {
-  Wire.begin(8);                // join i2c bus with address #8
-  Wire.onReceive(receiveEvent); // function that executes whenever data is received from writer
-  Serial.begin(115200); //number of bits per second
+  main_i2c.begin(I2C_ADDRESS);                // join i2c bus with address #8
+  main_i2c.onReceive(receive_event); // function that executes whenever data is received from writer
+  debug_serial.begin(115200); //number of bits per second
 
-  myservo0.attach(PB12);  // attaches the servo on pin 25 to the servo object
-  myservo1.attach(PB13);
-  myservo2.attach(PB14);
-  myservo3.attach(PB15);
-  myservo4.attach(PB9);
+  control_surfaces_setup(&debug_serial);
 
-  pinMode(PA5, OUTPUT); //LEDFIELD pins to OUTPUT mode
-  pinMode(PA6, OUTPUT);
-  pinMode(PA7, OUTPUT);
-  pinMode(PB0, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
+  digitalWrite(PIN_BUZZER, !BUZZER_ACTIVE);
+
+  pinMode(PIN_LED_STATUS_1, OUTPUT);
+  digitalWrite(PIN_LED_STATUS_1, !LED_ACTIVE);
+  pinMode(PIN_LED_STATUS_2, OUTPUT);
+  digitalWrite(PIN_LED_STATUS_2, !LED_ACTIVE);
 }
 
 void loop() {
