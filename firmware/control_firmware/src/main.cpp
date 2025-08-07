@@ -85,7 +85,7 @@ void setup() {
   main_i2c.onReceive(receive_event); // function that executes whenever data is received from writer
   debug_serial.begin(115200); //number of bits per second
 
-  control_surfaces_setup(&debug_serial);
+  ctrl_srfc_init(&debug_serial);
 
   pinMode(PIN_BUZZER, OUTPUT);
   digitalWrite(PIN_BUZZER, !BUZZER_ACTIVE);
@@ -115,46 +115,25 @@ void loop() {
   float percent1 = readings[1] / 1023.0;
   float percent2 = readings[2] / 1023.0;
   float percent3 = readings[3] / 1023.0;
-  float percent4 = readings[4] / 1023.0;
 
- for (int i = 1; i < 5; i++) {
-    Serial.println(i);
-     sum0 += matrix[0][i] * readings[0];
-     sum1 += matrix[1][i] * readings[1];
-     sum2 += matrix[2][i] * readings[2];
-     sum3 += matrix[3][i] * readings[3];
-   }
-   angle[0] = sum0;
-   angle[1] = sum1;
-   angle[2] = sum2;
-   angle[3] = sum3;
-   
-   Serial.println(angle[0]);
-   Serial.println(angle[1]);
-   Serial.println(angle[2]);
-   Serial.println(angle[3]);
+  for (int i = 1; i < 3; i++) {
+    sum0 += matrix[0][i] * readings[0];
+    sum1 += matrix[1][i] * readings[1];
+    sum2 += matrix[2][i] * readings[2];
+    sum3 += matrix[3][i] * readings[3];
+  }
+  angle[0] = sum0;
+  angle[1] = sum1;
+  angle[2] = sum2;
+  angle[3] = sum3;
    
   myservo0.write(angle[0]);                  // sets the servo position according to the scaled value
   myservo1.write(angle[1]);
   myservo2.write(angle[2]);
   myservo3.write(angle[3]);
 
-  if (P1 != angle[0]){
-    digitalWrite(PA5, HIGH);
-  } if (P2 != angle[0]){
-    digitalWrite(PA6, HIGH);
-  } if (P3 != angle[0]){
-    digitalWrite(PA7, HIGH);
-  } if (P4 != angle[0]){
-    digitalWrite(PB0, HIGH);
-  }
+  ctrl_srfc_check_state_all();
   
   delay(200);
 }
 
-
-
-/* float convertToServo(float reading) {
-  // Serial.println((reading / 100 - 1) * 90  + 90);
-  return (reading * 90 + 89);
-} */
