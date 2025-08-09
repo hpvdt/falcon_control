@@ -30,10 +30,9 @@ struct FlightStickState {
     };
 };
 
-void handle_flight_stick_request();
-void setup_to_serve(TwoWire* bus, uint8_t address);
-void setup_to_request(TwoWire* bus);
-void read_complete(uint8_t address, struct FlightStickState* destination);
-void update_output(struct FlightStickState* source);
+void fs_setup_to_serve(TwoWire* bus, uint8_t address);
+void fs_setup_to_request(TwoWire* bus);
+void fs_read_complete(uint8_t address, struct FlightStickState* destination);
+void fs_update_output(struct FlightStickState* source);
 
 #endif

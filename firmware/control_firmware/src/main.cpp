@@ -10,19 +10,24 @@ HardwareSerial debug_serial(PIN_DEBUG_RX, PIN_DEBUG_TX);
 const int I2C_ADDRESS = 8;
 TwoWire main_i2c(PIN_MAIN_SDA, PIN_MAIN_SCL);
 TwoWire controller_i2c(PIN_CONTROLLER_SDA, PIN_CONTROLLER_SCL);
+const uint8_t PILOT_ADDRESS = 0x23;
 
 const int LED_ACTIVE = HIGH;
 const int BUZZER_ACTIVE = HIGH;
 
-float angle [4] = {0};
-float input [3] = {0};
-float matrix [4][3] = {{90, 0, 0}, {0,90,0}, {0,0,90}, {0,90,90}};
+// Contribution of RPY to each of the control surfaces
+float contribution_matrix[CTRL_SRFC_COUNT][3] ={{  1.000,  0.000,  0.000}, 
+                                                {  0.000,  1.000,  0.000}, 
+                                                {  0.000,  0.000,  1.000}, 
+                                                {  0.000,  1.000,  0.000}}; 
+
+const unsigned long SURFACE_ALIGNMENT_ALERT_HOLD_MS = 2000;
 
 void setup() {
     main_i2c.begin(I2C_ADDRESS);
     debug_serial.begin(115200);
 
-    setup_to_request(&main_i2c);
+    fs_setup_to_request(&main_i2c);
 
     ctrl_srfc_init(&debug_serial);
 
@@ -40,22 +45,39 @@ void setup() {
 }
 
 void loop() {
+    const unsigned long CURRENT_MS = millis();
 
-    // for (int i = 0; i < 3; i++) {
-    //   sum0 += matrix[0][i] * readings[0];
-    //   sum1 += matrix[1][i] * readings[1];
-    //   sum2 += matrix[2][i] * readings[2];
-    //   sum3 += matrix[3][i] * readings[3];
-    // }
-    // angle[0] = sum0;
-    // angle[1] = sum1;
-    // angle[2] = sum2;
-    // angle[3] = sum3;
+    struct FlightStickState user_input;
+    fs_read_complete(PILOT_ADDRESS, &user_input);
 
-    for (int i = 0; i < CTRL_SRFC_COUNT; i++) ctrl_srfc_set((enum ControlSurface) i, angle[i]);
+    float surface_angle[CTRL_SRFC_COUNT] = {0};
+    for (int s = 0; s < CTRL_SRFC_COUNT; s++) {
+        surface_angle[s] =  contribution_matrix[s][0] * (float)user_input.axis_pitch;
+        surface_angle[s] += contribution_matrix[s][1] * (float)user_input.axis_roll;
+        surface_angle[s] += contribution_matrix[s][2] * (float)user_input.axis_yaw;
+    }
 
-    ctrl_srfc_check_state_all();
+    for (int i = 0; i < CTRL_SRFC_COUNT; i++) ctrl_srfc_set((enum ControlSurface) i, surface_angle[i]);
+
+    // Add some buzzing if any surface is still out of line after a timeout
+    // Timeout is needed to ignore transitions
+    bool mis_match[CTRL_SRFC_COUNT];
+    ctrl_srfc_check_state_all(mis_match);
+
+    static unsigned long unaligned_since_ms[CTRL_SRFC_COUNT];
+    bool buzzer_on = false;
+    for (int i = 0; i < CTRL_SRFC_COUNT; i++) {
+        if (mis_match[i] == false) {
+            unaligned_since_ms[i] = 0;
+            continue;
+        }
+
+        if (unaligned_since_ms == 0) unaligned_since_ms[i] = CURRENT_MS;
+        if (CURRENT_MS - unaligned_since_ms[i] > SURFACE_ALIGNMENT_ALERT_HOLD_MS) buzzer_on = true;
+    }
+    if (buzzer_on) digitalWrite(PIN_BUZZER, BUZZER_ACTIVE);
+    else digitalWrite(PIN_BUZZER, !BUZZER_ACTIVE);
     
-    delay(200);
+    delay(20);
 }
 
