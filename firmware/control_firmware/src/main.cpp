@@ -73,11 +73,15 @@ void setup() {
   ctrl_srfc_init(&debug_serial);
 
   pinMode(PIN_BUZZER, OUTPUT);
-  digitalWrite(PIN_BUZZER, !BUZZER_ACTIVE);
-
   pinMode(PIN_LED_STATUS_1, OUTPUT);
-  digitalWrite(PIN_LED_STATUS_1, !LED_ACTIVE);
   pinMode(PIN_LED_STATUS_2, OUTPUT);
+  
+  digitalWrite(PIN_BUZZER, BUZZER_ACTIVE);
+  digitalWrite(PIN_LED_STATUS_1, LED_ACTIVE);
+  digitalWrite(PIN_LED_STATUS_2, LED_ACTIVE);
+  delay(2000);
+  digitalWrite(PIN_BUZZER, !BUZZER_ACTIVE);
+  digitalWrite(PIN_LED_STATUS_1, !LED_ACTIVE);
   digitalWrite(PIN_LED_STATUS_2, !LED_ACTIVE);
 }
 

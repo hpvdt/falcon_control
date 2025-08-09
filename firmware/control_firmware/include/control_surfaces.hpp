@@ -1,5 +1,5 @@
-#ifndef CONTROL_SURFACES_H
-#define CONTROL_SURFACES_H
+#ifndef _CONTROL_SURFACES_H
+#define _CONTROL_SURFACES_H
 
 #include <Arduino.h>
 
