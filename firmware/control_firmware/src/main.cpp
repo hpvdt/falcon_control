@@ -4,6 +4,7 @@
 #include "pin_allocations.hpp"
 #include "control_surfaces.hpp"
 #include "flight_stick_comms.hpp"
+#include "flight_stick_state.h"
 
 HardwareSerial debug_serial(PIN_DEBUG_RX, PIN_DEBUG_TX);
 
